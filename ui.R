@@ -6,11 +6,12 @@ library(RJDBC)
 library(stringr)
 library(scales)
 
-##SUGERØRET INN I HØNSEFUGLPORTALEN##
+##SUGERÃ˜RET INN I HÃ˜NSEFUGLPORTALEN##
 drv <- JDBC("com.microsoft.sqlserver.jdbc.SQLServerDriver",
             "/etc/sqljdbc_3.0/sqljdbc4.jar")
 
-conn_pt <-dbConnect(drv, url="jdbc:sqlserver://ninsql05.nina.no;Database=SmaviltTest", "", "")
+source("credentials.R")
+conn_pt <-dbConnect(drv, url="jdbc:sqlserver://ninsql05.nina.no;Database=SmaviltTest", h_user, h_password)
 dbListTables(conn_pt) #VISER ALLE TABELLENE I PORTALEN
 temp <- dbReadTable (conn_pt, "Taksering") # DATA KNYTTTET TIL TAKSERINGSLINJENE (IKKE OBSERVASJONER).
 
@@ -33,7 +34,7 @@ TaksLin <- dbGetQuery(conn_pt, "SELECT LinjeID, FK_OmradeID FROM Takseringslinje
 TaksOmr <- dbGetQuery(conn_pt, "SELECT OmradeID, FK_Fylkekomnr, OmradeNavn FROM Takseringsomrade") 
 Kommune <- dbReadTable(conn_pt, "FYLKEKOMMUNE")
 
-#struper sugerørert inn i portalen slik at de som bruker appen jobber med ett datasett
+#struper sugerÃ¸rert inn i portalen slik at de som bruker appen jobber med ett datasett
 dbDisconnect(conn_pt) 
 
 ### Merging data, lager datasett "d"
@@ -41,12 +42,12 @@ dbDisconnect(conn_pt)
 d <- merge(Taks, TaksLin, by.x="FK_LinjeID", by.y="LinjeID", all.x=T, all.y=F)
 d <- merge(d, TaksOmr, by.x="FK_OmradeID", by.y="OmradeID", all.x=T, all.y=F)
 d <- merge(d, Kommune, by.x="FK_Fylkekomnr", by.y="Fylkekomnr", all.x=T, all.y=F)
-d<- subset(d, OmradeNavn!="Kursområde")
+d<- subset(d, OmradeNavn!="KursomrÃ¥de")
 
 d$Fylkesnavn <- str_trim(d$Fylkesnavn) 
 
-#Aar til År resten av dagen...
-colnames(d)[which(names(d) == "Aar")] <- "År"
+#Aar til Ã…r resten av dagen...
+colnames(d)[which(names(d) == "Aar")] <- "Ã…r"
 
 
 library(shiny)
@@ -61,52 +62,52 @@ ui <- fluidPage(
   img(src=(href = "http://honsefugl.nina.no/Innsyn/Content/images/logoweb_liten.png"), width = "300px", height = "50px"),
   br(),
   br(),
-  titlePanel("Værforhold, innsats og smågnagerindeks under takseringene"),
+  titlePanel("VÃ¦rforhold, innsats og smÃ¥gnagerindeks under takseringene"),
   br(),
   hr(),
   
   sidebarLayout(position = "left",
-                sidebarPanel("Trykk på et fylke for å se hvordan forholdene var under takseringene", width = 3,
+                sidebarPanel("Trykk pÃ¥ et fylke for Ã¥ se hvordan forholdene var under takseringene", width = 3,
                              radioButtons("Forhold", label = "", choices = unique(d$Fylkesnavn), selected = NULL),
                             
                             
                              #tags$hr(),
-                             helpText("Vær opmerksom på at i fylker der det er liten innsats (det vil si få linjer og få kilometer taksert) kan man få
+                             helpText("VÃ¦r opmerksom pÃ¥ at i fylker der det er liten innsats (det vil si fÃ¥ linjer og fÃ¥ kilometer taksert) kan man fÃ¥
                                       uventede utslag i dataene"),
                              conditionalPanel(
                                "$('li.active a').first().html()==='Takseringsforhold'",    
                                br(),
                                helpText(strong("Forhold for hunden"), "er en subjektiv vurdering av vitringsforholdene under takseringen. 
-                                        Det er taksørene selv som vurderer om forholdene er 1 = vanskelige, 2 =middels eller 
-                                        3 = gode for hunden. Figuren til høyre viser gjennomsnittet under takseringene i fylket."),
+                                        Det er taksÃ¸rene selv som vurderer om forholdene er 1 = vanskelige, 2 =middels eller 
+                                        3 = gode for hunden. Figuren til hÃ¸yre viser gjennomsnittet under takseringene i fylket."),
                                br(),
-                               helpText(strong("Temperatur (omtrentelig)"),"under takseringene vurderes også av taksørene. Det måles ikke temperatur i felt.
+                               helpText(strong("Temperatur (omtrentelig)"),"under takseringene vurderes ogsÃ¥ av taksÃ¸rene. Det mÃ¥les ikke temperatur i felt.
                                         Figuren viser gjennomsnittet for fylket." ),
                                
                                br(),
-                               helpText(strong("Værforhold"),"under takseringene registreres også av taksørene. Dersom været er skiftende
-                                        brukes den dominerende værtypen. Værforholdene vurderes subjektivt som; 1=Mye nedbør, 
-                                        2=Lett nedbør (duskregn), 3=Overskyet oppholdsvær, 4=sol. I figuren til høyre vises den værtypen som hyppigst opptrer under
+                               helpText(strong("VÃ¦rforhold"),"under takseringene registreres ogsÃ¥ av taksÃ¸rene. Dersom vÃ¦ret er skiftende
+                                        brukes den dominerende vÃ¦rtypen. VÃ¦rforholdene vurderes subjektivt som; 1=Mye nedbÃ¸r, 
+                                        2=Lett nedbÃ¸r (duskregn), 3=Overskyet oppholdsvÃ¦r, 4=sol. I figuren til hÃ¸yre vises den vÃ¦rtypen som hyppigst opptrer under
                                         tasksering i fylket.")
                                ),
                              
                              conditionalPanel(
                                "$('li.active a').first().html()==='Innsats'",    
                                br(),
-                               helpText(strong("Antall linjer"),"er antall linjer taksert i fylket det enkelte år."),
+                               helpText(strong("Antall linjer"),"er antall linjer taksert i fylket det enkelte Ã¥r."),
                                br(),
                                helpText(strong("Kilometer taksert"), "er anntall kilometer linjer taksert samlet for fylket. Denne henger sammen med antallet linjer,
-                                        og begge variablene gir en god ideks på omfanget av taksering i fylket" )
+                                        og begge variablene gir en god ideks pÃ¥ omfanget av taksering i fylket" )
                                
                                ),
                              
                              conditionalPanel(
-                               "$('li.active a').first().html()==='Smågnagerobservasjon'",    
+                               "$('li.active a').first().html()==='SmÃ¥gnagerobservasjon'",    
                                br(),
-                               helpText(strong("Smågnagere, rev og hare sett under takseringene.")," Verdiene i figuren til høyre viser prosent av linjene i
-                                        et fylke der disse artene ble observert. Som man ser observeres det lite rev og hare, men i 'smågnagerår' observeres
-                                        det smågnagere på mange linjer. 'Sett smågnagere' er en grov indeks for smågnagertetthet og toppene har vist seg å
-                                        sammenfalle med gode prosuksjonsår for lirype"))
+                               helpText(strong("SmÃ¥gnagere, rev og hare sett under takseringene.")," Verdiene i figuren til hÃ¸yre viser prosent av linjene i
+                                        et fylke der disse artene ble observert. Som man ser observeres det lite rev og hare, men i 'smÃ¥gnagerÃ¥r' observeres
+                                        det smÃ¥gnagere pÃ¥ mange linjer. 'Sett smÃ¥gnagere' er en grov indeks for smÃ¥gnagertetthet og toppene har vist seg Ã¥
+                                        sammenfalle med gode prosuksjonsÃ¥r for lirype"))
                              
                                ), 
                 
@@ -132,7 +133,7 @@ ui <- fluidPage(
                                                              plotlyOutput(outputId = "distPlot3" ),
                                                              plotlyOutput(outputId = "distPlot4" )))),
                                       
-                                      tabPanel(("Smågnagerobservasjon"),
+                                      tabPanel(("SmÃ¥gnagerobservasjon"),
                                                hr(),
                                                fluidRow(
                                                  splitLayout(cellWidths = c("50%", "50%","50%"),

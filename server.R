@@ -10,7 +10,8 @@ library(scales)
 drv <- JDBC("com.microsoft.sqlserver.jdbc.SQLServerDriver",
             "/etc/sqljdbc_3.0/sqljdbc4.jar")
 
-conn_pt <-dbConnect(drv, url="jdbc:sqlserver://ninsql05.nina.no;Database=SmaviltTest", "", "")
+source("credentials.R")
+conn_pt <-dbConnect(drv, url="jdbc:sqlserver://ninsql05.nina.no;Database=SmaviltTest", h_user, h_password)
 dbListTables(conn_pt) #VISER ALLE TABELLENE I PORTALEN
 temp <- dbReadTable (conn_pt, "Taksering") # DATA KNYTTTET TIL TAKSERINGSLINJENE (IKKE OBSERVASJONER).
 
