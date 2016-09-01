@@ -1,9 +1,57 @@
+library(shiny)
+library(plyr)
+library(ggplot2)
+library(plotly)
+library(RJDBC)
+library(stringr)
+library(scales)
 
+##SUGERØRET INN I HØNSEFUGLPORTALEN##
+drv <- JDBC("com.microsoft.sqlserver.jdbc.SQLServerDriver",
+            "/etc/sqljdbc_3.0/sqljdbc4.jar")
 
+conn_pt <-dbConnect(drv, url="jdbc:sqlserver://ninsql05.nina.no;Database=SmaviltTest", "", "")
+dbListTables(conn_pt) #VISER ALLE TABELLENE I PORTALEN
+temp <- dbReadTable (conn_pt, "Taksering") # DATA KNYTTTET TIL TAKSERINGSLINJENE (IKKE OBSERVASJONER).
+
+#Data som ligger i tabellen "Taksering"
+Taks <- dbGetQuery(conn_pt,"SELECT TakseringID,   
+                   FK_LinjeID, 
+                   Temperatur,
+                   SettSmagnager,
+                   SettRev,
+                   SettHare, 
+                   Aar,
+                   FK_NedborID,
+                   LengdeTaksert,
+                   StartKL,
+                   SluttKL,
+                   FK_HundeforholdID FROM Taksering")
+
+#Henter inn diverse fra ulike tabeller
+TaksLin <- dbGetQuery(conn_pt, "SELECT LinjeID, FK_OmradeID FROM Takseringslinje") 
+TaksOmr <- dbGetQuery(conn_pt, "SELECT OmradeID, FK_Fylkekomnr, OmradeNavn FROM Takseringsomrade") 
+Kommune <- dbReadTable(conn_pt, "FYLKEKOMMUNE")
+
+#struper sugerørert inn i portalen slik at de som bruker appen jobber med ett datasett
+dbDisconnect(conn_pt) 
+
+### Merging data, lager datasett "d"
+
+d <- merge(Taks, TaksLin, by.x="FK_LinjeID", by.y="LinjeID", all.x=T, all.y=F)
+d <- merge(d, TaksOmr, by.x="FK_OmradeID", by.y="OmradeID", all.x=T, all.y=F)
+d <- merge(d, Kommune, by.x="FK_Fylkekomnr", by.y="Fylkekomnr", all.x=T, all.y=F)
+d<- subset(d, OmradeNavn!="Kursområde")
+
+d$Fylkesnavn <- str_trim(d$Fylkesnavn) 
+
+#Aar til År resten av dagen...
+colnames(d)[which(names(d) == "Aar")] <- "År"
 
 
 library(shiny)
 library(plotly)
+
 #ui
 ui <- fluidPage(
   
@@ -19,8 +67,9 @@ ui <- fluidPage(
   
   sidebarLayout(position = "left",
                 sidebarPanel("Trykk på et fylke for å se hvordan forholdene var under takseringene", width = 3,
-                             radioButtons("Forhold", label = "", choices = Fylke1, selected = NULL),
-                             
+                             radioButtons("Forhold", label = "", choices = unique(d$Fylkesnavn), selected = NULL),
+                            
+                            
                              #tags$hr(),
                              helpText("Vær opmerksom på at i fylker der det er liten innsats (det vil si få linjer og få kilometer taksert) kan man få
                                       uventede utslag i dataene"),
