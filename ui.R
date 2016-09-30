@@ -43,6 +43,7 @@ d <- merge(Taks, TaksLin, by.x="FK_LinjeID", by.y="LinjeID", all.x=T, all.y=F)
 d <- merge(d, TaksOmr, by.x="FK_OmradeID", by.y="OmradeID", all.x=T, all.y=F)
 d <- merge(d, Kommune, by.x="FK_Fylkekomnr", by.y="Fylkekomnr", all.x=T, all.y=F)
 d<- subset(d, OmradeNavn!="Kursområde")
+d <- subset(d, Aar >2012 )
 
 d$Fylkesnavn <- str_trim(d$Fylkesnavn) 
 
